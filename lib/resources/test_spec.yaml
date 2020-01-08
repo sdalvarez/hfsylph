@@ -1,0 +1,175 @@
+version: 0.1
+
+# Phases are collection of commands that get executed on Device Farm.
+phases:
+  # The install phase includes commands that install dependencies that your tests use.
+  # Default dependencies for testing frameworks supported on Device Farm are already installed.
+  install:
+    commands:
+      # By default, Appium server version used is 1.7.2.
+      # You can switch to an alternate supported version from 1.6.5, 1.7.1, 1.7.2, 1.8.0 or 1.8.1 by using a command like "avm 1.7.1"
+      # OR
+      # To install a newer version of Appium use the following commands:
+      # - export APPIUM_VERSION=1.8.1
+      # - avm $APPIUM_VERSION
+      # - ln -s /usr/local/avm/versions/$APPIUM_VERSION/node_modules/.bin/appium  /usr/local/avm/versions/$APPIUM_VERSION/node_modules/appium/bin/appium.js
+
+      # enter flutter app directory in Appium bundle
+      - cd flutter_app
+      - ls -la
+
+      # check for bash
+      - bash --version
+
+      # env
+      - env
+      - whoami
+      - groups
+      - echo "DEVICEFARM_APP_PATH=$DEVICEFARM_APP_PATH"
+
+      # install flutter
+      - echo "Install flutter"
+      - FLUTTER_VERSION='v1.12.13+hotfix.5-stable'
+      - >-
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
+        then
+            # # Install android SDK
+            # java -version
+            # ANDROID_SDK_TOOLS=4333796 # command line tools only from Android Studio v3.5.3 (android-29)
+            # ANDROID_PLATFORM_SDK=29 # required by flutter
+            # ANDROID_BUILD_TOOLS=29.0.2 # required by flutter
+            # sudo apt install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+
+            # # Install the Android SDK Dependency.
+            # export ANDROID_HOME=${HOME}/android-sdk-linux
+            # echo $ANDROID_HOME
+            # cd $HOME
+            # wget -q https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip -O android-sdk-tools.zip
+            # unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}
+            # rm android-sdk-tools.zip
+            # cd -
+            # echo $PATH
+            # PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
+            # echo $PATH
+
+            # # Silence warning.
+            # mkdir -p ~/.android
+            # touch ~/.android/repositories.cfg
+
+            # # Accept licenses before installing components, no need to echo y for each component
+            # yes | sdkmanager --licenses
+
+            # # Platform and build tools (including flutter requirements)
+            # sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+            # sdkmanager --list | head -15
+
+            # Install Flutter
+            curl https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}.tar.xz -o flutter_linux.tar.xz
+            tar xf flutter_linux.tar.xz
+        fi
+
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
+        then
+            # Run Mac setup code here
+            system_profiler SPSoftwareDataType
+            sw_vers
+            which ios-deploy
+            ios-deploy -V
+            xcodebuild -version
+            xcode-select --print-path
+            gcc --version
+            lldb --version
+
+            # install local brew because cannot upgrade ios-deploy
+            # try skipping upgrade (takes a long time)
+            #- git clone --depth=1 https://github.com/Homebrew/brew ~/.brew
+            #- export PATH="$HOME/.brew/bin:$HOME/.brew/sbin:$PATH"
+            #- brew install ios-deploy
+            #- which ios-deploy
+            #- ios-deploy -V
+
+            # Install Flutter dependencies
+            # brew upgrade ios-deploy
+            # brew install cocoapods
+            # pod setup
+            # Install Flutter
+            curl https://storage.googleapis.com/flutter_infra/releases/stable/macos/flutter_macos_$FLUTTER_VERSION.zip -o flutter_macos.zip
+            unzip -qq flutter_macos.zip
+        fi
+
+      - mv flutter $HOME/flutter
+      #- echo "export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin">> ~/.bash_profile
+      - export PATH=$PATH:$HOME/flutter/bin:$HOME/flutter/bin/cache/dart-sdk/bin
+      - export PATH="$PATH":"$HOME/.pub-cache/bin"
+      - flutter doctor -v
+
+  # The pre-test phase includes commands that setup your test environment.
+  pre_test:
+    commands:
+      # We recommend starting appium server process in the background using the command below.
+      # Appium server log will go to $DEVICEFARM_LOG_DIR directory.
+      # The environment variables below will be auto-populated during run time.
+
+
+  # The test phase includes commands that run your test suite execution.
+  test:
+    commands:
+      - PHASE_FAILED=0
+      - >-
+        track_phase_failure() {
+          local command_failed=$?
+          if [ "$command_failed" != "0" ]; then
+            echo "Most recent command failed with error code: $command_failed"
+            PHASE_FAILED=$command_failed
+          fi
+        }
+
+        set_phase_exit_code() {
+          return $PHASE_FAILED
+        }
+
+      # Your test package is downloaded in $DEVICEFARM_TEST_PACKAGE_PATH so we first change directory to that path.
+      # We already setup python virtual environment on $DEVICEFARM_TEST_PACKAGE_PATH
+      # and installed required libraries. You can run your test under $DEVICEFARM_TEST_PACKAGE_PATH
+      - echo "Navigate to test package directory"
+      - cd $DEVICEFARM_TEST_PACKAGE_PATH
+      - echo "Start Flutter integration test"
+      # By default, the following command is used by Device Farm to run your Appium Python test.
+      # The goal is to run all your tests files in the test package.
+      # Alternatively, You may specify your customized command.
+      # Note: For most use cases, the default command works fine.
+      # Please refer "https://docs.pytest.org/en/latest/usage.html" for more options on running pytests from command line.
+      # - bin/py.test tests/ --junit-xml $DEVICEFARM_LOG_DIR/junitreport.xml
+      - cd flutter_app
+      - MAIN=test_driver/main.dart
+      - TESTS='test_driver/main_test.dart'
+      - >-
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "Android" ];
+        then
+          ./script/test_android.sh --run-tests "$TESTS"
+          track_phase_failure
+        fi
+
+        if [ $DEVICEFARM_DEVICE_PLATFORM_NAME = "iOS" ];
+        then
+          ./script/test_ios.sh --unpack $DEVICEFARM_APP_PATH
+          track_phase_failure
+          ./script/test_ios.sh --dummy-symbols build_to_os.txt
+          track_phase_failure
+          ./script/test_ios.sh --run-tests "$MAIN" "$TESTS"
+          track_phase_failure
+        fi
+
+      - echo done.
+      - set_phase_exit_code
+
+  # The post test phase includes are commands that are run after your tests are executed.
+  post_test:
+    commands:
+
+# The artifacts phase lets you specify the location where your tests logs, device logs will be stored.
+# And also let you specify the location of your test logs and artifacts which you want to be collected by Device Farm.
+# These logs and artifacts will be available through ListArtifacts API in Device Farm.
+artifacts:
+  # By default, Device Farm will collect your artifacts from following directories
+  - $DEVICEFARM_LOG_DIR
