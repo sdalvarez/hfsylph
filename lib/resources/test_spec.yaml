@@ -63,7 +63,7 @@ phases:
             #sdkmanager "tools" "platform-tools" "platforms;android-${ANDROID_PLATFORM_SDK}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
             #sdkmanager --list | head -15
 
-            /opt/dev/android-sdk-linux/tools/bin/sdkmanager" "platforms;android-28" "build-tools;28.0.3"
+            /opt/dev/android-sdk-linux/tools/bin/sdkmanager "platforms;android-28" "build-tools;28.0.3"
             # Install Flutter
             curl https://storage.googleapis.com/flutter_infra/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}.tar.xz -o flutter_linux.tar.xz
             tar xf flutter_linux.tar.xz
