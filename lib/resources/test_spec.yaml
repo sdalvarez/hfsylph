@@ -38,7 +38,7 @@ phases:
             # ANDROID_SDK_TOOLS=4333796 # command line tools only from Android Studio v3.5.3 (android-29)
             ANDROID_PLATFORM_SDK=28 # required by flutter
             ANDROID_BUILD_TOOLS=28.0.3 # required by flutter
-            # sudo apt install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
+            sudo apt install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
 
             # # Install the Android SDK Dependency.
             export ANDROID_HOME=${HOME}/android-sdk-linux
