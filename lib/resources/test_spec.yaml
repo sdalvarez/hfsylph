@@ -41,7 +41,7 @@ phases:
             #sudo apt install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
 
             # # Install the Android SDK Dependency.
-            # export ANDROID_HOME=${HOME}/android-sdk-linux
+            export ANDROID_HOME=${HOME}/android-sdk-linux
             echo $ANDROID_HOME
             cd $HOME
             wget -q https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip -O android-sdk-tools.zip
@@ -51,7 +51,9 @@ phases:
             echo $PATH
             PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools
             echo $PATH
-
+            ## aaaaaaaaaaaaaaaaaaaaaaaaaa
+            ln -sf ${ANDROID_HOME}/platform-tools/adb /usr/local/bin
+            ## aaaaaaaaaaaaaaaaaaaaaaaaaa
             # # Silence warning.
             mkdir -p ~/.android
             touch ~/.android/repositories.cfg
