@@ -41,7 +41,7 @@ phases:
             #sudo apt install -y --no-install-recommends lib32stdc++6 libstdc++6 > /dev/null
 
             # # Install the Android SDK Dependency.
-            export ANDROID_HOME=${HOME}/android-sdk-linux
+            # export ANDROID_HOME=${HOME}/android-sdk-linux
             echo $ANDROID_HOME
             cd $HOME
             wget -q https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip -O android-sdk-tools.zip
